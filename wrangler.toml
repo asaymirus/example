@@ -1,0 +1,9 @@
+name = "island-todo-branding"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "./dist"
+
+[[r2_buckets]]
+binding = "BRAND_ASSETS"
+bucket_name = "island-todo-brand-assets"

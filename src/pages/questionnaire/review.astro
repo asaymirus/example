@@ -1,0 +1,160 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { phases, getTotalQuestions } from '@lib/questionnaire-data';
+
+const totalQuestions = getTotalQuestions();
+---
+
+<BaseLayout title="Review Your Answers">
+  <section class="py-12 lg:py-16">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h1 class="text-3xl font-heading font-bold text-gray-900 mb-3">
+          Review Your Answers
+        </h1>
+        <p class="text-gray-600">
+          Review everything before we generate your Brand Blueprint.
+          Click "Edit" on any answer to make changes.
+        </p>
+        <div class="mt-4">
+          <span id="completion-badge" class="phase-badge bg-island-100 text-island-800">
+            0 of {totalQuestions} answered
+          </span>
+        </div>
+      </div>
+
+      <!-- Phase Accordions -->
+      <div class="space-y-4" id="review-container">
+        {phases.map((phase) => (
+          <details class="card" open={phase.number === 1}>
+            <summary class="flex items-center justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-island-100 text-island-700 flex items-center justify-center text-xs font-bold">
+                  {phase.number}
+                </span>
+                <div>
+                  <h3 class="font-bold text-gray-900">{phase.title}</h3>
+                  <span class="text-xs text-gray-500">{phase.questions.length} questions</span>
+                </div>
+              </div>
+              <span class="phase-completion text-xs font-medium text-gray-400" data-phase={phase.number}>
+                0/{phase.questions.length}
+              </span>
+            </summary>
+
+            <div class="mt-4 space-y-4 pl-11">
+              {phase.questions.map((question) => (
+                <div class="border-b border-gray-100 pb-4 last:border-0" id={`review-q-${question.id}`}>
+                  <p class="text-sm font-medium text-gray-700 mb-1">{question.text}</p>
+                  <p class="text-sm text-gray-900 answer-display" data-question-id={question.id}>
+                    <span class="text-gray-400 italic">Not answered yet</span>
+                  </p>
+                  <a
+                    href={`/questionnaire/${question.phase}#question-${question.id}`}
+                    class="text-xs text-island-600 hover:text-island-800 font-medium mt-1 inline-block"
+                  >
+                    Edit
+                  </a>
+                </div>
+              ))}
+            </div>
+          </details>
+        ))}
+      </div>
+
+      <!-- Generate Button -->
+      <div class="text-center mt-12 space-y-4">
+        <button
+          id="generate-btn"
+          class="btn-primary text-lg px-10 py-4 w-full sm:w-auto"
+        >
+          Generate My Brand Blueprint
+        </button>
+        <p class="text-sm text-gray-500">
+          You can always come back and refine your answers later.
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { phases, getTotalQuestions } from '../../lib/questionnaire-data';
+  import { generateBrandGuide } from '../../lib/brand-generator';
+  import { slugify } from '../../lib/utils';
+
+  const STORAGE_KEY = 'island_todo_branding_answers';
+  const GUIDE_STORAGE_KEY = 'island_todo_brand_guide';
+
+  function loadAnswers(): Record<string, string> {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch {
+      return {};
+    }
+  }
+
+  const answers = loadAnswers();
+  const totalQuestions = getTotalQuestions();
+
+  // Populate answer displays
+  let totalAnswered = 0;
+  const phaseCompletions = document.querySelectorAll<HTMLElement>('.phase-completion');
+
+  phases.forEach((phase) => {
+    let phaseAnswered = 0;
+
+    phase.questions.forEach((question) => {
+      const display = document.querySelector(
+        `.answer-display[data-question-id="${question.id}"]`
+      );
+      const answer = answers[String(question.id)];
+
+      if (display && answer && answer.trim()) {
+        display.textContent = answer;
+        display.classList.remove('text-gray-400', 'italic');
+        phaseAnswered++;
+        totalAnswered++;
+      }
+    });
+
+    // Update phase completion counter
+    const phaseEl = document.querySelector(
+      `.phase-completion[data-phase="${phase.number}"]`
+    );
+    if (phaseEl) {
+      phaseEl.textContent = `${phaseAnswered}/${phase.questions.length}`;
+      if (phaseAnswered === phase.questions.length) {
+        phaseEl.classList.add('text-island-600');
+        phaseEl.classList.remove('text-gray-400');
+      }
+    }
+  });
+
+  // Update total completion badge
+  const badge = document.getElementById('completion-badge');
+  if (badge) {
+    badge.textContent = `${totalAnswered} of ${totalQuestions} answered`;
+    if (totalAnswered === totalQuestions) {
+      badge.classList.remove('bg-island-100', 'text-island-800');
+      badge.classList.add('bg-green-100', 'text-green-800');
+    }
+  }
+
+  // Generate button
+  const generateBtn = document.getElementById('generate-btn');
+  if (generateBtn) {
+    generateBtn.addEventListener('click', () => {
+      const numericAnswers: Record<number, string> = {};
+      for (const [key, value] of Object.entries(answers)) {
+        numericAnswers[Number(key)] = value;
+      }
+
+      const guide = generateBrandGuide(numericAnswers);
+      localStorage.setItem(GUIDE_STORAGE_KEY, JSON.stringify(guide));
+
+      const slug = slugify(guide.brandName);
+      window.location.href = `/guide/${slug}`;
+    });
+  }
+</script>

@@ -1,0 +1,153 @@
+---
+import QuestionnaireLayout from '@layouts/QuestionnaireLayout.astro';
+import { phases, getPhase, getQuestionCountUpToPhase } from '@lib/questionnaire-data';
+
+const phaseNumber = Number(Astro.params.phase);
+const phase = getPhase(phaseNumber);
+
+if (!phase) {
+  return Astro.redirect('/start');
+}
+
+const questionOffset = getQuestionCountUpToPhase(phaseNumber);
+const isLastPhase = phaseNumber === phases.length;
+const nextUrl = isLastPhase ? '/questionnaire/review' : `/questionnaire/${phaseNumber + 1}`;
+const prevUrl = phaseNumber === 1 ? '/start' : `/questionnaire/${phaseNumber - 1}`;
+---
+
+<QuestionnaireLayout phase={phase.number} phaseTitle={phase.title} totalPhases={phases.length}>
+  <!-- Phase Intro -->
+  <div class="mb-10">
+    <p class="text-sm font-medium text-island-600 mb-1">Phase {phase.number}</p>
+    <h2 class="text-2xl font-heading font-bold text-gray-900 mb-2">{phase.title}</h2>
+    <p class="text-gray-500 italic">"{phase.tagline}"</p>
+    <p class="text-gray-600 mt-3">{phase.intro}</p>
+  </div>
+
+  <!-- Questions -->
+  <form id="phase-form" class="space-y-8" data-phase={phase.number}>
+    {phase.questions.map((question, index) => (
+      <div class="card" id={`question-${question.id}`}>
+        <div class="flex items-start justify-between mb-3">
+          <label class="block font-medium text-gray-900" for={`q-${question.id}`}>
+            <span class="text-sm text-gray-400 mr-2">Q{questionOffset + index + 1}.</span>
+            {question.text}
+          </label>
+        </div>
+
+        {question.inputType === 'short' ? (
+          <input
+            type="text"
+            id={`q-${question.id}`}
+            name={`q-${question.id}`}
+            class="input-field"
+            placeholder={question.placeholder}
+            data-question-id={question.id}
+          />
+        ) : (
+          <textarea
+            id={`q-${question.id}`}
+            name={`q-${question.id}`}
+            class="textarea-field"
+            rows="4"
+            placeholder={question.placeholder}
+            data-question-id={question.id}
+          ></textarea>
+        )}
+
+        <!-- Example Toggle -->
+        <details class="mt-3">
+          <summary class="text-sm text-island-600 cursor-pointer hover:text-island-800 font-medium">
+            Show example
+          </summary>
+          <div class="mt-2 p-3 bg-island-50 rounded-lg text-sm text-island-800 italic">
+            {question.example}
+          </div>
+        </details>
+      </div>
+    ))}
+
+    <!-- What This Phase Generates -->
+    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+      <h3 class="text-sm font-bold text-gray-700 mb-3">What this phase generates:</h3>
+      <ul class="space-y-1">
+        {phase.generates.map((item) => (
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <span class="w-1.5 h-1.5 rounded-full bg-island-500 flex-shrink-0"></span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex items-center justify-between pt-4">
+      <a href={prevUrl} class="btn-secondary text-sm">
+        &larr; {phaseNumber === 1 ? 'Back to Overview' : `Phase ${phaseNumber - 1}`}
+      </a>
+      <div class="flex items-center gap-3">
+        <span id="save-status" class="text-xs text-gray-400"></span>
+        <a href={nextUrl} id="next-btn" class="btn-primary text-sm">
+          {isLastPhase ? 'Review All Answers' : `Phase ${phaseNumber + 1}: ${phases[phaseNumber]?.title}`} &rarr;
+        </a>
+      </div>
+    </div>
+  </form>
+</QuestionnaireLayout>
+
+<script>
+  // Auto-save to localStorage with debounce
+  const STORAGE_KEY = 'island_todo_branding_answers';
+
+  function loadAnswers(): Record<string, string> {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch {
+      return {};
+    }
+  }
+
+  function saveAnswers(answers: Record<string, string>) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+  }
+
+  // Load saved answers into form fields
+  const answers = loadAnswers();
+  const form = document.getElementById('phase-form') as HTMLFormElement;
+  const statusEl = document.getElementById('save-status') as HTMLElement;
+
+  if (form) {
+    const inputs = form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+      'input[data-question-id], textarea[data-question-id]'
+    );
+
+    // Populate saved values
+    inputs.forEach((input) => {
+      const qId = input.dataset.questionId;
+      if (qId && answers[qId]) {
+        input.value = answers[qId];
+      }
+    });
+
+    // Auto-save on input with debounce
+    let saveTimeout: ReturnType<typeof setTimeout>;
+    inputs.forEach((input) => {
+      input.addEventListener('input', () => {
+        const qId = input.dataset.questionId;
+        if (!qId) return;
+
+        statusEl.textContent = 'Saving...';
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          const current = loadAnswers();
+          current[qId] = input.value;
+          saveAnswers(current);
+          statusEl.textContent = 'Saved';
+          setTimeout(() => {
+            statusEl.textContent = '';
+          }, 2000);
+        }, 500);
+      });
+    });
+  }
+</script>

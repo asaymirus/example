@@ -1,0 +1,67 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout>
+  <div class="mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-heading font-bold text-gray-900">Your Brands</h1>
+      <p class="text-gray-600 mt-1">Manage all your brand workspaces.</p>
+    </div>
+    <a href="/start" class="btn-primary text-sm">New Brand</a>
+  </div>
+
+  <!-- Brand List (populated client-side from localStorage/API) -->
+  <div id="brand-list" class="space-y-4">
+    <!-- Empty state -->
+    <div id="empty-state" class="card text-center py-16">
+      <div class="w-16 h-16 rounded-full bg-island-100 flex items-center justify-center mx-auto mb-4">
+        <span class="text-2xl text-island-600">+</span>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mb-2">No brands yet</h3>
+      <p class="text-gray-600 mb-6">Your brand journey starts with the first answer.</p>
+      <a href="/start" class="btn-primary">Start Your First Brand Blueprint</a>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const GUIDE_STORAGE_KEY = 'island_todo_brand_guide';
+
+  const guide = localStorage.getItem(GUIDE_STORAGE_KEY);
+  if (guide) {
+    try {
+      const parsed = JSON.parse(guide);
+      const emptyState = document.getElementById('empty-state');
+      const brandList = document.getElementById('brand-list');
+
+      if (emptyState && brandList) {
+        emptyState.style.display = 'none';
+
+        const slug = parsed.brandName
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
+
+        const card = document.createElement('a');
+        card.href = `/guide/${slug}`;
+        card.className = 'card flex items-center justify-between hover:border-island-300 block';
+        card.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-island-100 flex items-center justify-center">
+              <span class="text-lg font-bold text-island-700">${parsed.brandName.charAt(0)}</span>
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-900">${parsed.brandName}</h3>
+              <p class="text-sm text-gray-500">Generated ${new Date(parsed.generatedAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+          <span class="text-sm text-island-600 font-medium">View Guide &rarr;</span>
+        `;
+        brandList.prepend(card);
+      }
+    } catch {
+      // Invalid guide data, ignore
+    }
+  }
+</script>
