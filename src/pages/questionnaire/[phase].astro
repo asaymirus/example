@@ -2,6 +2,18 @@
 import QuestionnaireLayout from '@layouts/QuestionnaireLayout.astro';
 import { phases, getPhase, getQuestionCountUpToPhase } from '@lib/questionnaire-data';
 
+export function getStaticPaths() {
+  return [
+    { params: { phase: '1' } },
+    { params: { phase: '2' } },
+    { params: { phase: '3' } },
+    { params: { phase: '4' } },
+    { params: { phase: '5' } },
+    { params: { phase: '6' } },
+    { params: { phase: '7' } },
+  ];
+}
+
 const phaseNumber = Number(Astro.params.phase);
 const phase = getPhase(phaseNumber);
 
