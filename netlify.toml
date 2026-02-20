@@ -20,3 +20,24 @@
     for = "/*"
     [headers.values]
       Access-Control-Allow-Origin = "*"
+
+# Friendly URLs for gazette RSS feeds
+[[redirects]]
+    from = "/feeds/gazette"
+    to = "/.netlify/functions/gazette-rss"
+    status = 200
+
+[[redirects]]
+    from = "/feeds/gazette.xml"
+    to = "/.netlify/functions/gazette-rss"
+    status = 200
+
+[[redirects]]
+    from = "/feeds/iulaan"
+    to = "/.netlify/functions/iulaan-rss"
+    status = 200
+
+[[redirects]]
+    from = "/feeds/iulaan.xml"
+    to = "/.netlify/functions/iulaan-rss"
+    status = 200
