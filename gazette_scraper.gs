@@ -371,8 +371,11 @@ function scrapeArchiveBatch(section, url, parser, existingIds) {
   }
 
   // ── Resume archive pointer ─────────────────────────────────
-  var nextPage = parseInt(props.getProperty(section + "_next_archive") || "0", 10);
-  if (!nextPage) nextPage = lastPage; // first time: start from oldest
+  // IMPORTANT: null means "never started" (start from lastPage).
+  //            "0"  means "archive fully crawled" (stop).
+  //            These must NOT be collapsed to the same value.
+  var nextPageStr = props.getProperty(section + "_next_archive");
+  var nextPage = (nextPageStr === null) ? lastPage : parseInt(nextPageStr, 10);
 
   if (nextPage < 1) {
     Logger.log("[" + section + "] Archive fully crawled.");
