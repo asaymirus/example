@@ -1,0 +1,5 @@
+
+# Gazette scraper runtime files
+gazette_data.csv
+gazette_scraper.log
+gazette_state.json
