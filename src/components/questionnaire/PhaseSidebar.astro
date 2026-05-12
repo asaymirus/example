@@ -1,0 +1,53 @@
+---
+interface Props {
+  currentPhase: number;
+}
+
+const { currentPhase } = Astro.props;
+
+const phaseNames = [
+  'Your Story',
+  'Your Process',
+  'Your People',
+  'Your Voice',
+  'Your Look',
+  'Your Position',
+  'Your Blueprint',
+];
+
+const items = phaseNames.map((name, i) => {
+  const num = i + 1;
+  const isCurrent = num === currentPhase;
+  const isCompleted = num < currentPhase;
+  return {
+    name,
+    num,
+    href: `/questionnaire/${num}`,
+    linkClass: isCurrent
+      ? 'bg-island-50 text-island-800'
+      : isCompleted
+        ? 'text-island-600 hover:bg-gray-50'
+        : 'text-gray-400',
+    badgeClass: isCurrent
+      ? 'bg-island-700 text-white'
+      : isCompleted
+        ? 'bg-island-200 text-island-800'
+        : 'bg-gray-200 text-gray-500',
+    label: isCompleted ? '✓' : String(num),
+  };
+});
+---
+
+<nav class="sticky top-20 space-y-2">
+  {items.map((item) => (
+    <a
+      href={item.href}
+      class={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${item.linkClass}`}
+    >
+      <span class={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${item.badgeClass}`}>
+        {item.label}
+      </span>
+      {item.name}
+    </a>
+  ))}
+</nav>

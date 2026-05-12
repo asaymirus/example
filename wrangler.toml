@@ -1,0 +1,8 @@
+name = "island-todo-branding"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "./dist"
+
+# R2 bucket for brand assets (configure after first deploy)
+# [[r2_buckets]]
+# binding = "BRAND_ASSETS"
+# bucket_name = "island-todo-brand-assets"

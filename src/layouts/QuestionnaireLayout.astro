@@ -1,0 +1,60 @@
+---
+import PhaseSidebar from '../components/questionnaire/PhaseSidebar.astro';
+import PhaseIndicatorMobile from '../components/questionnaire/PhaseIndicatorMobile.astro';
+
+interface Props {
+  phase: number;
+  phaseTitle: string;
+  totalPhases: number;
+}
+
+const { phase, phaseTitle, totalPhases } = Astro.props;
+const progress = Math.round((phase / totalPhases) * 100);
+const progressStyle = `width: ${progress}%`;
+const pageTitle = `Phase ${phase} - ${phaseTitle} | Island Todo Branding Blueprint`;
+const pageDescription = `Phase ${phase} - ${phaseTitle} - Island Todo Branding Blueprint`;
+const phaseLabel = `Phase ${phase} of ${totalPhases}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={pageDescription} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <title>{pageTitle}</title>
+  </head>
+  <body class="min-h-screen bg-gray-50">
+    <div class="fixed top-0 left-0 right-0 z-50 h-1 bg-gray-200">
+      <div class="h-full bg-island-600 transition-all duration-500 ease-out" style={progressStyle}></div>
+    </div>
+
+    <header class="bg-white border-b border-gray-200 pt-1">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <a href="/" class="text-lg font-heading font-bold text-island-800">Island Todo</a>
+        <div class="text-center">
+          <p class="text-sm text-gray-500">{phaseLabel}</p>
+          <p class="text-sm font-medium text-gray-900">{phaseTitle}</p>
+        </div>
+        <button id="save-exit-btn" class="text-sm text-gray-500 hover:text-gray-700">
+          Save & Exit
+        </button>
+      </div>
+    </header>
+
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 pt-6">
+      <PhaseIndicatorMobile currentPhase={phase} />
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 lg:pt-8 lg:flex lg:gap-8">
+      <aside class="hidden lg:block w-56 flex-shrink-0">
+        <PhaseSidebar currentPhase={phase} />
+      </aside>
+
+      <div class="flex-1 max-w-2xl mx-auto lg:mx-0">
+        <slot />
+      </div>
+    </div>
+  </body>
+</html>
